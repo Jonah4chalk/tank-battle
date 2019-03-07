@@ -6,7 +6,7 @@ public class Tank {
   PShape t;
   PShape b;
   PShape n;
-  int x, y;
+  int x, y; //position
   final int speed = 1;
   final int aChange = 1;
   float currentNozzleAngle = 0;
@@ -39,18 +39,18 @@ public class Tank {
     t = createShape(GROUP);
     n = createShape();
     n.beginShape();
-    n.vertex(center.x, noz.y - 1);
-    n.vertex(center.x, noz.y + 1);
+    n.vertex(center.x, center.y - 1);
+    n.vertex(center.x, center.y + 1);
     n.vertex(noz.x, noz.y + 1);
     n.vertex(noz.x, noz.y - 1);
     n.endShape(CLOSE);
     n.setFill(c);
     b = createShape();
     b.beginShape();
-    b.vertex(x - 15, y - 6);
-    b.vertex(x + 15, y - 6);
-    b.vertex(x + 15, y + 6);
-    b.vertex(x - 15, y + 6);
+    b.vertex(center.x - 15, center.y - 6);
+    b.vertex(center.x + 15, center.y - 6);
+    b.vertex(center.x + 15, center.y + 6);
+    b.vertex(center.x - 15, center.y + 6);
     b.endShape(CLOSE);
     b.setFill(c);
     t.addChild(n);
@@ -85,12 +85,7 @@ public class Tank {
   
   void update() {
     x = constrain(x + speed*(int(isLeft) - int(isRight)), 6, width - 6);
-    //if (x < (width - 6) && x > 6) {
-    //  t.translate(speed*(int(isLeft) - int(isRight)), 0);
-    //}
     currentNozzleAngle += aChange*(int(rotRight) - int(rotLeft));
-    //n.rotate(radians(aChange*(int(rotRight) - int(rotLeft))));
-    
     loadPixels();
     color black = color(0);
     color below = get(x, y + 6);
@@ -120,10 +115,10 @@ public class Tank {
     b.setVertex(1, center.x + 15, center.y - 6);
     b.setVertex(2, center.x + 15, center.y + 6);
     b.setVertex(3, center.x - 15, center.y + 6);
-    n.setVertex(0, nozVec.x, nozVec.y - 1);
-    n.setVertex(1, nozVec.x, nozVec.y + 1);
-    n.setVertex(2, center.x, y + 1);
-    n.setVertex(3, center.x, y - 1);
+    n.setVertex(0, center.x + sinAngle, y - cosAngle);
+    n.setVertex(1, center.x - sinAngle, y + cosAngle);
+    n.setVertex(2, nozVec.x - sinAngle , nozVec.y + cosAngle);
+    n.setVertex(3, nozVec.x + sinAngle, nozVec.y - cosAngle);
     updatePixels();
     for (Weapon w: bullets) {
       w.update();
@@ -140,7 +135,7 @@ public class Tank {
     ny = power.x*sinAngle;
     nozVec.x = nx;
     nozVec.y = ny;
-    println(power); //power is the vector that the projectile initially travels
+    // println(power); power is the vector that the projectile initially travels
     bullets.add(new Shot(nozVec, power));
   }
 }
