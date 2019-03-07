@@ -1,17 +1,19 @@
 public class Tank {
   ArrayList<Weapon> bullets = new ArrayList();
-  boolean isLeft, isRight, rotLeft, rotRight, isShooting;
+  boolean isLeft, isRight, rotLeft, rotRight, powerUp, powerDown, isShooting;
   color c;
   PVector power, center, noz, nozVec;
   PShape t;
   PShape b;
   PShape n;
-  int x, y; //position
-  final int speed = 1;
-  final int aChange = 1;
+  int x, y;
+  final int speed = 1, aChange = 1;
+  final float powerChange = 0.02;
   float currentNozzleAngle = 0;
+  int id;
   
   Tank(int Id, int xpos, int ypos) {
+    id = Id;
     x = xpos;
     y = ypos;
     switch(Id % 4) {
@@ -34,23 +36,23 @@ public class Tank {
     center = new PVector(x, y);
     noz = new PVector(x + 25, y);
     nozVec = PVector.sub(noz, center);
-    power = new PVector();
+    power = new PVector(5, 0);
     strokeWeight(0);
     t = createShape(GROUP);
     n = createShape();
     n.beginShape();
-    n.vertex(center.x, center.y - 1);
-    n.vertex(center.x, center.y + 1);
+    n.vertex(center.x, noz.y - 1);
+    n.vertex(center.x, noz.y + 1);
     n.vertex(noz.x, noz.y + 1);
     n.vertex(noz.x, noz.y - 1);
     n.endShape(CLOSE);
     n.setFill(c);
     b = createShape();
     b.beginShape();
-    b.vertex(center.x - 15, center.y - 6);
-    b.vertex(center.x + 15, center.y - 6);
-    b.vertex(center.x + 15, center.y + 6);
-    b.vertex(center.x - 15, center.y + 6);
+    b.vertex(x - 15, y - 6);
+    b.vertex(x + 15, y - 6);
+    b.vertex(x + 15, y + 6);
+    b.vertex(x - 15, y + 6);
     b.endShape(CLOSE);
     b.setFill(c);
     t.addChild(n);
@@ -73,31 +75,33 @@ public class Tank {
       case RIGHT:
         return rotRight = b;
         
+      case UP:
+        return powerUp = b;
+        
+      case DOWN:
+        return powerDown = b;
+        
       default:
         return b;
     }
   }
   
-  void display() {
-    strokeWeight(0);
-    shape(t);
-  }
-  
   void update() {
     x = constrain(x + speed*(int(isLeft) - int(isRight)), 6, width - 6);
     currentNozzleAngle += aChange*(int(rotRight) - int(rotLeft));
+    power.x = constrain(power.x + (powerChange*(int(powerUp) - int(powerDown))), powerChange, 25);
+    
     loadPixels();
     color black = color(0);
-    color below = get(x, y + 6);
-    while ((x + ((y + 6)*width) < pixels.length) && (below == backgroundColor || below == color(255, 255, 0) || below == color(0, 255, 0) || below == color(255, 0, 0) || below == color(0, 0, 255))) {
+    while ((x + ((y + 6)*width) < pixels.length) && (pixels[(y+6)*width + x] == backgroundColor)) {
       y++;
-      below = get(x, y + 6);
     } 
-    color above = get(x, y);
-    while ((x + (y*width) > 0) && (above == black || above == color(255, 255, 0) || above == color(0, 255, 0) || above == color(255, 0, 0) || above == color(0, 0, 255))) {
+    color above = get(x, y + 5);
+    while ((x + (y*width) > 0) && (above == black)) {
       y--;
-      above = get(x, y);
+      above = get(x, y + 5);
     }
+    updatePixels();
     center.set(x, y);
     noz.set(x + 25, y);
     nozVec = PVector.sub(noz, center);
@@ -119,23 +123,35 @@ public class Tank {
     n.setVertex(1, center.x - sinAngle, y + cosAngle);
     n.setVertex(2, nozVec.x - sinAngle , nozVec.y + cosAngle);
     n.setVertex(3, nozVec.x + sinAngle, nozVec.y - cosAngle);
-    updatePixels();
-    for (Weapon w: bullets) {
-      w.update();
-      w.display();
+    if (id == tankTurn && bullets.size() == 0) {
+      float p = mag(power.x, power.y);
+      textFont(f, 16);
+      textAlign(CENTER);
+      fill(255);
+      text(((currentNozzleAngle != 0) ? -currentNozzleAngle : currentNozzleAngle) + ", " + nfc(p, 1), center.x, center.y - 20);
     }
+    strokeWeight(0);
+    shape(t);
   }  
   
-  void shoot() { //pos1 is the position of the nozzle end
-    PVector power = new PVector(4, 0);
+  void wUpdate() {
+    for (Weapon w: bullets) {
+      w.update();
+      strokeWeight(1);
+      w.display();
+    }
+  }
+  void shoot() { 
+    PVector velocity = new PVector();
+    velocity.set(power);
     float nx, ny;
     float sinAngle = sin(radians(currentNozzleAngle));
     float cosAngle = cos(radians(currentNozzleAngle));
-    nx = power.x*cosAngle;
-    ny = power.x*sinAngle;
-    nozVec.x = nx;
-    nozVec.y = ny;
-    // println(power); power is the vector that the projectile initially travels
-    bullets.add(new Shot(nozVec, power));
+    nx = velocity.x*cosAngle;
+    ny = velocity.x*sinAngle;
+    velocity.x = nx;
+    velocity.y = ny;
+    //velocity is the vector that the projectile initially travels
+    bullets.add(new Shot(nozVec, velocity));
   }
 }
