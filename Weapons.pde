@@ -25,7 +25,7 @@ class Shot extends Weapon {
   
   void display() {
     ellipseMode(CENTER);
-    stroke(1);
+    stroke(0);
     strokeWeight(1);
     fill(255);
     ellipse(loc.x, loc.y, 5, 5);
@@ -44,12 +44,15 @@ class Shot extends Weapon {
     else if (loc.y < 0) {
       inFlight = true;
     }
-    else if (detector == color(0)) {
-      noLoop();
+    else if (detector != backgroundColor) {
+      explode();
     }
   }
   
   void explode() {
-    //do nothing
+    fill(255, 0, 0);
+    ellipse(loc.x, loc.y, 20, 20);
+    delay(500);
+    inFlight = false;
   }
 }
