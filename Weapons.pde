@@ -7,7 +7,7 @@ public abstract class Weapon {
   public Weapon(PVector location, PVector velocity) {
     loc = location;
     vel = velocity;
-    acc = new PVector(0, 0.1);
+    acc = new PVector(0, 0.1); //gravity
     inFlight = true;
   }
   
@@ -25,7 +25,7 @@ class Shot extends Weapon {
   
   void display() {
     ellipseMode(CENTER);
-    stroke(0);
+    stroke(1);
     strokeWeight(1);
     fill(255);
     ellipse(loc.x, loc.y, 5, 5);
@@ -35,12 +35,21 @@ class Shot extends Weapon {
   void update() {
     loc.add(vel);
     vel.add(acc);
+    //println(int(loc.x + (loc.y*width)));
+    loadPixels();
+    color detector = get(int(loc.x), int(loc.y));
     if (loc.x < 0 || loc.x > width || loc.y > height) {
       inFlight = false;
+    } 
+    else if (loc.y < 0) {
+      inFlight = true;
+    }
+    else if (detector == color(0)) {
+      noLoop();
     }
   }
   
   void explode() {
-    // empty
+    //do nothing
   }
 }
