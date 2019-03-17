@@ -38,8 +38,8 @@ public class Tank {
     nozVec = PVector.sub(noz, center);
     power = new PVector(5, 0);
     strokeWeight(0);
-    t = createShape(GROUP);
-    n = createShape();
+    t = createShape(GROUP); // tank shape contains nozzle and body
+    n = createShape(); // nozzle shape
     n.beginShape();
     n.vertex(center.x, noz.y - 1);
     n.vertex(center.x, noz.y + 1);
@@ -48,7 +48,7 @@ public class Tank {
     n.endShape(CLOSE);
     n.setFill(c);
     b = createShape();
-    b.beginShape();
+    b.beginShape(); // body shape
     b.vertex(x - 15, y - 6);
     b.vertex(x + 15, y - 6);
     b.vertex(x + 15, y + 6);
@@ -92,6 +92,7 @@ public class Tank {
     power.x = constrain(power.x + (powerChange*(int(powerUp) - int(powerDown))), powerChange, 25);
     
     loadPixels();
+    // uses color detection to keep the tank on top of the 'ground' which is black
     color black = color(0);
     while ((x + ((y + 6)*width) < pixels.length) && (pixels[(y+6)*width + x] == backgroundColor)) {
       y++;
@@ -123,6 +124,7 @@ public class Tank {
     n.setVertex(1, center.x - sinAngle, y + cosAngle);
     n.setVertex(2, nozVec.x - sinAngle , nozVec.y + cosAngle);
     n.setVertex(3, nozVec.x + sinAngle, nozVec.y - cosAngle);
+    // keeps the nozzle the same shape as it rotates
     if (id == tankTurn && bullets.size() == 0) {
       float p = mag(power.x, power.y);
       textFont(f, 16);
@@ -134,6 +136,7 @@ public class Tank {
     shape(t);
   }  
   
+  // calls the function that updates any bullets that are in the air
   void wUpdate() {
     for (Weapon w: bullets) {
       w.update();
@@ -141,6 +144,8 @@ public class Tank {
       w.display();
     }
   }
+  
+  //pushes a new bullet into existence when a tank fires
   void shoot() { 
     PVector velocity = new PVector();
     velocity.set(power);
