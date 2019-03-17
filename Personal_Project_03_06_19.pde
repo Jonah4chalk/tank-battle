@@ -3,7 +3,6 @@ Tank tester;
 Tank opponent;
 Terrain ground;
 color backgroundColor = color(160, 231, 237);
-PVector a = new PVector(0, 0);
 int tankTurn;
 PFont f;
 
