@@ -17,8 +17,8 @@ public abstract class Weapon {
   }
   
   abstract void display();
-  abstract void update();
-  abstract void explode(Tank[] players);
+  abstract void update(ArrayList<Tank> players);
+  abstract void explode(ArrayList<Tank> players);
   
 }
 
@@ -49,7 +49,7 @@ class Shot extends Weapon {
     //println(loc.x, loc.y);
   }
   
-  void update() {
+  void update(ArrayList<Tank> players) {
     if (exploding) {
       if (explOpacity <= 0) {
         inFlight = false;
@@ -68,13 +68,24 @@ class Shot extends Weapon {
       else if (loc.y < 0) { // prevents detector from trying to check colors offscreen
         inFlight = true;
       }
-      else if (detector != backgroundColor) {
-        explode(players);
+      else {
+        for (Tank t: players) {
+          if ((loc.x > t.b.getVertex(0).x) && (loc.x < t.b.getVertex(2).x) 
+          && (loc.y > t.b.getVertex(0).y) && (loc.y < t.b.getVertex(2).y)) {
+            explode(players);
+            break;
+          }
+        }
+        if (exploding == false) {
+          if (detector == terrColor) {
+            explode(players);
+          }
+        }
       }
     }
   }
 
-  void explode(Tank[] players) {
+  void explode(ArrayList<Tank> players) {
     fill(explColor, explOpacity);
     noStroke();
     ellipse(loc.x, loc.y, explRad, explRad);
@@ -85,7 +96,6 @@ class Shot extends Weapon {
           break;
         }
       }
-      // println(tank.health);
     }
     exploding = true;
   }
