@@ -1,5 +1,5 @@
 public class Tank {
-  ArrayList<Weapon> bullets = new ArrayList();
+  ArrayList<Weapon> bullets = new ArrayList<Weapon>();
   boolean isLeft, isRight, rotLeft, rotRight, powerUp, powerDown, isShooting;
   color c;
   PVector power, center, noz, nozVec;
@@ -7,15 +7,17 @@ public class Tank {
   PShape b;
   PShape n;
   int x, y;
-  final int speed = 1, aChange = 1;
-  final float powerChange = 0.02;
+  final float aChange = 1, powerChange = 0.03;
+  final int speed = 1;
   float currentNozzleAngle = 0;
   int id;
+  int health;
   
   Tank(int Id, int xpos, int ypos) {
     id = Id;
     x = xpos;
     y = ypos;
+    health = 100;
     switch(Id % 4) {
       case 0:
         c = color(255, 255, 0);
@@ -38,8 +40,8 @@ public class Tank {
     nozVec = PVector.sub(noz, center);
     power = new PVector(5, 0);
     strokeWeight(0);
-    t = createShape(GROUP); // tank shape contains nozzle and body
-    n = createShape(); // nozzle shape
+    t = createShape(GROUP);
+    n = createShape();
     n.beginShape();
     n.vertex(center.x, noz.y - 1);
     n.vertex(center.x, noz.y + 1);
@@ -48,7 +50,7 @@ public class Tank {
     n.endShape(CLOSE);
     n.setFill(c);
     b = createShape();
-    b.beginShape(); // body shape
+    b.beginShape();
     b.vertex(x - 15, y - 6);
     b.vertex(x + 15, y - 6);
     b.vertex(x + 15, y + 6);
@@ -89,16 +91,17 @@ public class Tank {
   void update() {
     x = constrain(x + speed*(int(isLeft) - int(isRight)), 6, width - 6);
     currentNozzleAngle += aChange*(int(rotRight) - int(rotLeft));
-    power.x = constrain(power.x + (powerChange*(int(powerUp) - int(powerDown))), powerChange, 25);
+    if (currentNozzleAngle > 360 || currentNozzleAngle < -360) {
+      currentNozzleAngle = 0;
+    }
+    power.x = constrain(power.x + (powerChange*(int(powerUp) - int(powerDown))), 0.1, 25);
     
     loadPixels();
-    // uses color detection to keep the tank on top of the 'ground' which is black
-    color black = color(0);
     while ((x + ((y + 6)*width) < pixels.length) && (pixels[(y+6)*width + x] == backgroundColor)) {
       y++;
     } 
     color above = get(x, y + 5);
-    while ((x + (y*width) > 0) && (above == black)) {
+    while ((x + (y*width) > 0) && (above == terrColor)) {
       y--;
       above = get(x, y + 5);
     }
@@ -124,7 +127,8 @@ public class Tank {
     n.setVertex(1, center.x - sinAngle, y + cosAngle);
     n.setVertex(2, nozVec.x - sinAngle , nozVec.y + cosAngle);
     n.setVertex(3, nozVec.x + sinAngle, nozVec.y - cosAngle);
-    // keeps the nozzle the same shape as it rotates
+    noStroke();
+    shape(t);
     if (id == tankTurn && bullets.size() == 0) {
       float p = mag(power.x, power.y);
       textFont(f, 16);
@@ -132,20 +136,24 @@ public class Tank {
       fill(255);
       text(((currentNozzleAngle != 0) ? -currentNozzleAngle : currentNozzleAngle) + ", " + nfc(p, 1), center.x, center.y - 20);
     }
-    strokeWeight(0);
-    shape(t);
+    colorMode(HSB);
+    fill(health, 255, 255);
+    noStroke();
+    rect(center.x - 15, center.y - 15, 0.3*health, 5);
+    if (health <= 0) {
+      noLoop();
+      println("Game Complete");
+    }
+    colorMode(RGB, 255, 255, 255);
   }  
   
-  // calls the function that updates any bullets that are in the air
   void wUpdate() {
     for (Weapon w: bullets) {
-      w.update();
+      w.update(players);
       strokeWeight(1);
       w.display();
     }
   }
-  
-  //pushes a new bullet into existence when a tank fires
   void shoot() { 
     PVector velocity = new PVector();
     velocity.set(power);
