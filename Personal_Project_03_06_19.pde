@@ -1,7 +1,9 @@
+// this would all go in one state of a state machine eventually
+
 Tank[] players = new Tank[2];
 Tank tester;
 Tank opponent;
-Terrain ground;
+Terrain l;
 color backgroundColor = color(160, 231, 237);
 int tankTurn;
 PFont f;
@@ -9,11 +11,10 @@ PFont f;
 void setup() {
   fullScreen();
   frameRate(60);
-  background(backgroundColor);
   f = loadFont("Symbol-48.vlw");
-  tester = new Tank(0, 100, 100);
-  opponent = new Tank(1, 150, 100);
-  ground = new Terrain();
+  tester = new Tank(0, 100, height - 10);
+  opponent = new Tank(1, 200, height - 10);
+  l = new Terrain();
   players[0] = tester;
   players[1] = opponent;
   tankTurn = 0;
@@ -22,7 +23,7 @@ void setup() {
 
 void draw() {
   background(backgroundColor);
-  ground.display();
+  l.display();
   players[tankTurn].update();
   for (int t = 0; t < players.length; t++) {
     if (t != tankTurn) {
