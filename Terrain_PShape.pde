@@ -4,9 +4,9 @@ public class Terrain {
   float yoff = 0;
   float xoff = 0;
   
-  public Terrain() {
+  Terrain() {
     terrain = createShape();
-    terrain.setFill(0);
+    terrain.setFill(terrColor);
     terrain.beginShape();
     // Iterate over horizontal pixels
     for (float x = 0; x <= width; x++) {
@@ -23,6 +23,23 @@ public class Terrain {
     terrain.vertex(width, height);
     terrain.vertex(0, height);
     terrain.endShape(CLOSE);
+  }
+  
+    void update(color explosion) {
+    loadPixels();
+    for (int w = 0; w <= width; w++) {
+      int shift = 0;
+      for (int i = int(terrain.getVertex(w).y); i < height - 1; i++) {
+        if (pixels[(i*width) + w] == explosion) {
+          shift++;
+        }
+        if (pixels[(i*width) + w] == terrColor && shift != 0) {
+          break;
+        }
+      }
+      terrain.setVertex(w, w, terrain.getVertex(w).y + shift);
+    }
+    updatePixels();
   }
   
   void display() {
