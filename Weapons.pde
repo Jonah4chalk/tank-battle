@@ -5,7 +5,7 @@ public abstract class Weapon {
   boolean inFlight, exploding = false;
   float explOpacity = 255;
   color explColor;
-  float explRad;
+  float explSize;
   float weapSize;
   int damage;
   
@@ -19,7 +19,6 @@ public abstract class Weapon {
   abstract void display();
   abstract void update(ArrayList<Tank> players);
   abstract void explode(ArrayList<Tank> players);
-  
 }
 
 class Shot extends Weapon {
@@ -27,7 +26,7 @@ class Shot extends Weapon {
   Shot(PVector loc, PVector vel) {
     super(loc, vel);
     explColor = color(255);
-    explRad = 10;
+    explSize = 10;
     weapSize = 5;
     damage = 10;
   }
@@ -40,7 +39,7 @@ class Shot extends Weapon {
     }
     if (exploding) {
       fill(explColor, explOpacity);
-      ellipse(loc.x, loc.y, explRad, explRad);
+      ellipse(loc.x, loc.y, explSize, explSize);
     } else {
       strokeWeight(1);
       stroke(0);
@@ -70,8 +69,8 @@ class Shot extends Weapon {
       }
       else {
         for (Tank t: players) {
-          if ((loc.x > t.b.getVertex(0).x) && (loc.x < t.b.getVertex(2).x) 
-          && (loc.y > t.b.getVertex(0).y) && (loc.y < t.b.getVertex(2).y)) {
+          if ((loc.x + weapSize/2 > t.b.getVertex(0).x) && (loc.x - weapSize/2 < t.b.getVertex(2).x) 
+          && (loc.y + weapSize/2 > t.b.getVertex(0).y) && (loc.y - weapSize/2 < t.b.getVertex(2).y)) {
             explode(players);
             break;
           }
@@ -88,13 +87,10 @@ class Shot extends Weapon {
   void explode(ArrayList<Tank> players) {
     fill(explColor, explOpacity);
     noStroke();
-    ellipse(loc.x, loc.y, explRad, explRad);
+    ellipse(loc.x, loc.y, explSize, explSize);
     for (Tank tank: players) {
-      for (int i = 0; i < 4; i++) {
-        if ((dist(tank.n.getVertex(i).x, tank.n.getVertex(i).y, loc.x, loc.y) <= explRad) || (dist(tank.b.getVertex(i).x, tank.b.getVertex(i).y, loc.x, loc.y) <= explRad)) {
-          tank.health -= 10;
-          break;
-        }
+      if (loc.x + explSize/2 >= tank.b.getVertex(0).x && loc.x - explSize/2 <= tank.b.getVertex(2).x && loc.y + explSize/2 >= tank.b.getVertex(0).y && loc.y - explSize/2 <= tank.b.getVertex(2).y) {
+        tank.health -= 10;
       }
     }
     exploding = true;
