@@ -1,5 +1,6 @@
 public class Tank {
   ArrayList<Weapon> bullets = new ArrayList<Weapon>();
+  ArrayList<Weapon> inventory = new ArrayList<Weapon>();
   boolean isLeft, isRight, rotLeft, rotRight, powerUp, powerDown, isShooting;
   color c;
   PVector power, center, noz, nozVec;
@@ -11,13 +12,17 @@ public class Tank {
   final int speed = 1;
   float currentNozzleAngle = 0;
   int id;
+  int maxHealth;
   int health;
+  int fuel;
   
   Tank(int Id, int xpos, int ypos) {
     id = Id;
     x = xpos;
     y = ypos;
     health = 100;
+    maxHealth = health;
+    fuel = 30;
     switch(Id % 4) {
       case 0:
         c = color(255, 255, 0);
@@ -59,16 +64,27 @@ public class Tank {
     b.setFill(c);
     t.addChild(n);
     t.addChild(b);
+    fillInventory();
   }
   
   boolean setMove(int k, boolean b) {
     switch(k) {
       case 'A':
       case 'a':
+        if (fuel <= 0 || b == false) {
+          return isRight = false;
+        } else {
+          fuel--;
+        }
         return isRight = b;
    
       case 'D':
       case 'd':
+        if (fuel <= 0 || b == false) {
+          return isLeft = false;
+        } else {
+          fuel--;
+        }
         return isLeft = b;
         
       case LEFT:
@@ -89,9 +105,12 @@ public class Tank {
   }
   
   void update() {
-    x = constrain(x + speed*(int(isLeft) - int(isRight)), 6, width - 6);
+    
+    //************************* POSITION *************************//
+    
+    x = constrain(x + speed*(int(isLeft) - int(isRight)), 12, width - 12);
     currentNozzleAngle += aChange*(int(rotRight) - int(rotLeft));
-    if (currentNozzleAngle > 360 || currentNozzleAngle < -360) {
+    if (currentNozzleAngle >= 360 || currentNozzleAngle <= -360) {
       currentNozzleAngle = 0;
     }
     power.x = constrain(power.x + (powerChange*(int(powerUp) - int(powerDown))), 0.1, 25);
@@ -129,22 +148,29 @@ public class Tank {
     n.setVertex(3, nozVec.x + sinAngle, nozVec.y - cosAngle);
     noStroke();
     shape(t);
-    if (id == tankTurn && bullets.size() == 0) {
-      float p = mag(power.x, power.y);
-      textFont(f, 16);
-      textAlign(CENTER);
-      fill(255);
-      text(((currentNozzleAngle != 0) ? -currentNozzleAngle : currentNozzleAngle) + ", " + nfc(p, 1), center.x, center.y - 20);
-    }
-    colorMode(HSB);
+    
+    //************************** HEALTH **************************//
+    
+    colorMode(HSB, 255, 255, 255);
     fill(health, 255, 255);
     noStroke();
-    rect(center.x - 15, center.y - 15, 0.3*health, 5);
+    rect(center.x - 15, center.y - 15, map(health, 0, maxHealth, 0, 30), 3);
+    fill(150, 255, 255);
+    rect(center.x - 15, center.y - 12, fuel, 3);
     if (health <= 0) {
+      health = 0;
       noLoop();
       println("Game Complete");
     }
     colorMode(RGB, 255, 255, 255);
+    
+    //************************* INVENTORY *************************//
+    
+    if (inventory.size() <= 5) {
+      fillInventory();
+    }
+    //println(fuel);
+    //println(center.x);
   }  
   
   void wUpdate() {
@@ -165,6 +191,32 @@ public class Tank {
     velocity.x = nx;
     velocity.y = ny;
     //velocity is the vector that the projectile initially travels
-    bullets.add(new Shot(nozVec, velocity));
+    Weapon b = inventory.get(0);
+    b.setLocation(nozVec);
+    b.setVelocity(velocity);
+    bullets.add(b);
+    inventory.remove(0);
+  }
+  
+  void fillInventory() {
+    for (int i = 0; i < 20; i++) {
+      int rand = int(random(4));
+      Weapon w = new Shot(nozVec, power);
+      switch(rand) {
+        case 0:
+          w = new Shot(nozVec, power);
+          break;
+        case 1:
+          w = new BigShot(nozVec, power);
+          break;
+        case 2:
+          w = new HeavyShot(nozVec, power);
+          break;
+        case 3:
+          w = new MassiveShot(nozVec, power);
+          break;
+      }
+      inventory.add(w);
+    }
   }
 }
