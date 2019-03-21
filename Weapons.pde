@@ -1,7 +1,7 @@
 public abstract class Weapon {
-  PVector loc;
-  PVector vel;
-  PVector acc;
+  private PVector loc;
+  private PVector vel;
+  private PVector acc;
   boolean inFlight, exploding = false;
   float explOpacity = 255;
   color explColor;
@@ -10,16 +10,44 @@ public abstract class Weapon {
   int damage;
   
   public Weapon(PVector location, PVector velocity) {
-    loc = location;
-    vel = velocity;
-    acc = new PVector(0, 0.1); //gravity
+    this.loc = location;
+    this.vel = velocity;
+    this.acc = new PVector(0, 0.1); //gravity
     inFlight = true;
   }
   
   abstract void display();
   abstract void update(ArrayList<Tank> players);
   abstract void explode(ArrayList<Tank> players);
+  
+  public PVector getVelocity() {
+    return this.vel;
+  }
+  
+  public PVector getLocation() {
+    return this.loc;
+  }
+  
+  public PVector getAcceleration() {
+    return this.acc;
+  }
+  
+  public void setVelocity(PVector newVel) {
+    this.vel = newVel;
+  }
+  
+  public void setLocation(PVector newLoc) {
+    this.loc = newLoc;
+  }
+  
+  public void setAcceleration(PVector newAcc) {
+    this.acc = newAcc;
+  }
 }
+
+//************************************************************//
+//*************************** SHOT ***************************//
+//************************************************************//
 
 class Shot extends Weapon {
   
@@ -39,13 +67,13 @@ class Shot extends Weapon {
     }
     if (exploding) {
       fill(explColor, explOpacity);
-      ellipse(loc.x, loc.y, explSize, explSize);
+      ellipse(getLocation().x, getLocation().y, explSize, explSize);
     } else {
       strokeWeight(1);
       stroke(0);
-      ellipse(loc.x, loc.y, weapSize, weapSize);
+      ellipse(getLocation().x, getLocation().y, weapSize, weapSize);
     }
-    //println(loc.x, loc.y);
+    //println(getLocation().x, getLocation().y);
   }
   
   void update(ArrayList<Tank> players) {
@@ -56,21 +84,21 @@ class Shot extends Weapon {
         explOpacity -= 2;
       }
     } else {
-      loc.add(vel);
-      vel.add(acc);
+      getLocation().add(getVelocity());
+      getVelocity().add(getAcceleration());
       //println(int(loc.x + (loc.y*width)));
       loadPixels();
-      color detector = get(int(loc.x), int(loc.y));
-      if (loc.x < 0 || loc.x > width || loc.y > height) {
+      color detector = get(int(getLocation().x), int(getLocation().y));
+      if (getLocation().x < 0 || getLocation().x > width || getLocation().y > height) {
         inFlight = false;
       } 
-      else if (loc.y < 0) { // prevents detector from trying to check colors offscreen
+      else if (getLocation().y < 0) { // prevents detector from trying to check colors offscreen
         inFlight = true;
       }
       else {
         for (Tank t: players) {
-          if ((loc.x + weapSize/2 > t.b.getVertex(0).x) && (loc.x - weapSize/2 < t.b.getVertex(2).x) 
-          && (loc.y + weapSize/2 > t.b.getVertex(0).y) && (loc.y - weapSize/2 < t.b.getVertex(2).y)) {
+          if ((getLocation().x + weapSize/2 > t.b.getVertex(0).x) && (getLocation().x - weapSize/2 < t.b.getVertex(2).x) 
+          && (getLocation().y + weapSize/2 > t.b.getVertex(0).y) && (getLocation().y - weapSize/2 < t.b.getVertex(2).y)) {
             explode(players);
             break;
           }
@@ -87,12 +115,45 @@ class Shot extends Weapon {
   void explode(ArrayList<Tank> players) {
     fill(explColor, explOpacity);
     noStroke();
-    ellipse(loc.x, loc.y, explSize, explSize);
+    ellipse(getLocation().x, getLocation().y, explSize, explSize);
     for (Tank tank: players) {
-      if (loc.x + explSize/2 >= tank.b.getVertex(0).x && loc.x - explSize/2 <= tank.b.getVertex(2).x && loc.y + explSize/2 >= tank.b.getVertex(0).y && loc.y - explSize/2 <= tank.b.getVertex(2).y) {
-        tank.health -= 10;
+      if (getLocation().x + explSize/2 >= tank.b.getVertex(0).x && getLocation().x - explSize/2 <= tank.b.getVertex(2).x && getLocation().y + explSize/2 >= tank.b.getVertex(0).y && getLocation().y - explSize/2 <= tank.b.getVertex(2).y) {
+        tank.health -= damage;
       }
     }
     exploding = true;
+  }
+}
+
+class BigShot extends Shot {
+  
+  BigShot(PVector loc, PVector vel) {
+    super(loc, vel);
+    explColor = color(255);
+    explSize = 18;
+    weapSize = 9;
+    damage = 15;
+  }
+}
+
+class HeavyShot extends Shot {
+  
+  HeavyShot(PVector loc, PVector vel) {
+    super(loc, vel);
+    explColor = color(255);
+    explSize = 25;
+    weapSize = 13;
+    damage = 20;
+  }
+}
+
+class MassiveShot extends Shot {
+  
+  MassiveShot(PVector loc, PVector vel) {
+    super(loc, vel);
+    explColor = color(255);
+    explSize = 35;
+    weapSize = 20;
+    damage = 30;
   }
 }
