@@ -15,10 +15,11 @@ void setup() {
   frameRate(60);
   f = loadFont("Symbol-48.vlw");
   tester = new Tank(0, 100, height - 10);
-  opponent = new Tank(1, 200, height - 10);
+  opponent = new Tank(1, 150, height - 10);
   l = new Terrain();
   players.add(tester);
   players.add(opponent);
+  Collections.shuffle(players);
   tankTurn = 0;
 }
 
@@ -27,6 +28,15 @@ void draw() {
   background(backgroundColor);
   l.display();
   players.get(tankTurn).update();
+  float p = mag(players.get(tankTurn).power.x, players.get(tankTurn).power.y);
+  textFont(f, 16);
+  textAlign(CENTER);
+  fill(255);
+  if (players.get(tankTurn).bullets.size() == 0) {
+    text(((players.get(tankTurn).currentNozzleAngle != 0) 
+    ? -players.get(tankTurn).currentNozzleAngle : players.get(tankTurn).currentNozzleAngle) 
+    + ", " + nfc(p, 1), players.get(tankTurn).center.x, players.get(tankTurn).center.y - 20);
+  }
   for (int t = 0; t < players.size(); t++) {
     if (t != tankTurn) {
       players.get(t).update();
@@ -42,6 +52,7 @@ void draw() {
       if (tankTurn >= players.size()) {
         tankTurn = 0;
       }
+      players.get(tankTurn).fuel = 30;
     }
   }
 }
