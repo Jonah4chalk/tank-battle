@@ -1,7 +1,8 @@
 public class Tank {
   ArrayList<Weapon> bullets = new ArrayList<Weapon>();
   ArrayList<Weapon> inventory = new ArrayList<Weapon>();
-  boolean isLeft, isRight, rotLeft, rotRight, powerUp, powerDown, isShooting;
+  int selection = 0;
+  boolean isLeft, isRight, rotLeft, rotRight, powerUp, powerDown, isShooting, selectPrev, selectNext, isAlive;
   color c;
   PVector power, center, noz, nozVec;
   PShape t;
@@ -12,9 +13,7 @@ public class Tank {
   final int speed = 1;
   float currentNozzleAngle = 0;
   int id;
-  int maxHealth;
-  int health;
-  int fuel;
+  int maxHealth, health, maxFuel, fuel;
   
   Tank(int Id, int xpos, int ypos) {
     id = Id;
@@ -22,7 +21,8 @@ public class Tank {
     y = ypos;
     health = 100;
     maxHealth = health;
-    fuel = 30;
+    fuel = 150;
+    maxFuel = fuel;
     switch(Id % 4) {
       case 0:
         c = color(255, 255, 0);
@@ -71,22 +71,20 @@ public class Tank {
     switch(k) {
       case 'A':
       case 'a':
-        if (fuel <= 0 || b == false) {
-          return isRight = false;
-        } else {
-          fuel--;
-        }
         return isRight = b;
    
       case 'D':
       case 'd':
-        if (fuel <= 0 || b == false) {
-          return isLeft = false;
-        } else {
-          fuel--;
-        }
         return isLeft = b;
         
+      case 'Q':
+      case 'q':
+        return selectPrev = b;
+        
+      case 'E':
+      case 'e':
+        return selectNext = b;
+      
       case LEFT:
         return rotLeft = b;
    
@@ -107,24 +105,21 @@ public class Tank {
   void update() {
     
     //************************* POSITION *************************//
-    
-    x = constrain(x + speed*(int(isLeft) - int(isRight)), 12, width - 12);
-    currentNozzleAngle += aChange*(int(rotRight) - int(rotLeft));
     if (currentNozzleAngle >= 360 || currentNozzleAngle <= -360) {
       currentNozzleAngle = 0;
     }
-    power.x = constrain(power.x + (powerChange*(int(powerUp) - int(powerDown))), 0.1, 25);
-    
-    loadPixels();
-    while ((x + ((y + 6)*width) < pixels.length) && (pixels[(y+6)*width + x] == backgroundColor)) {
-      y++;
-    } 
-    color above = get(x, y + 5);
-    while ((x + (y*width) > 0) && (above == terrColor)) {
-      y--;
-      above = get(x, y + 5);
+    power.x = constrain(power.x + (powerChange*(int(powerUp) - int(powerDown))), 0.1, 10);
+    if (isLeft != isRight) {
+      if (fuel == 0) {
+        isLeft = false;
+        isRight = false;
+      } else {
+        fuel--;
+      }
     }
-    updatePixels();
+    x = constrain(x + speed*(int(isLeft) - int(isRight)), 12, width - 12);
+    currentNozzleAngle += aChange*(int(rotRight) - int(rotLeft));
+    y = int(l.terrain.getVertex(x).y);
     center.set(x, y);
     noz.set(x + 25, y);
     nozVec = PVector.sub(noz, center);
@@ -149,23 +144,31 @@ public class Tank {
     noStroke();
     shape(t);
     
-    //************************** HEALTH **************************//
-    
+    //************************** STATUS BARS **************************//
     colorMode(HSB, 255, 255, 255);
     fill(health, 255, 255);
     noStroke();
     rect(center.x - 15, center.y - 15, map(health, 0, maxHealth, 0, 30), 3);
     fill(150, 255, 255);
-    rect(center.x - 15, center.y - 12, fuel, 3);
+    rect(center.x - 15, center.y - 12, map(fuel, 0, maxFuel, 0, 30), 3);
+    isAlive = boolean(health);
     if (health <= 0) {
       health = 0;
-      noLoop();
-      println("Game Complete");
+      fuel = 0;
+      b.setFill(color(0));
+      n.setFill(color(0));
     }
     colorMode(RGB, 255, 255, 255);
     
     //************************* INVENTORY *************************//
     
+    selection += int(selectNext) - int(selectPrev);
+    if (selection < 0) {
+        selection = inventory.size() - 1;
+      }
+    if (selection >= inventory.size()) {
+        selection = 0;
+      }
     if (inventory.size() <= 5) {
       fillInventory();
     }
@@ -180,6 +183,7 @@ public class Tank {
       w.display();
     }
   }
+  
   void shoot() { 
     PVector velocity = new PVector();
     velocity.set(power);
@@ -191,18 +195,18 @@ public class Tank {
     velocity.x = nx;
     velocity.y = ny;
     //velocity is the vector that the projectile initially travels
-    Weapon b = inventory.get(0);
+    Weapon b = inventory.get(selection);
     b.setLocation(nozVec);
     b.setVelocity(velocity);
     bullets.add(b);
-    inventory.remove(0);
+    inventory.remove(selection);
   }
   
   void fillInventory() {
-    for (int i = 0; i < 20; i++) {
-      int rand = int(random(4));
+    for (int i = 0; i < 20; i++) { //max number is final inventory size
+      int rand = int(random(4)); // for now this has to be equal to the number of weapons available
       Weapon w = new Shot(nozVec, power);
-      switch(rand) {
+      switch(rand) { // this switch needs to contain every weapon
         case 0:
           w = new Shot(nozVec, power);
           break;

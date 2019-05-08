@@ -2,12 +2,14 @@ public abstract class Weapon {
   private PVector loc;
   private PVector vel;
   private PVector acc;
-  boolean inFlight, exploding = false;
+  boolean inFlight, exploding = false, damaging = false;
   float explOpacity = 255;
   color explColor;
   float explSize;
   float weapSize;
   int damage;
+  PGraphics dmgNum;
+  ArrayList<Tank> hit = new ArrayList<Tank>(0);
   
   public Weapon(PVector location, PVector velocity) {
     this.loc = location;
@@ -63,11 +65,41 @@ class Shot extends Weapon {
     ellipseMode(CENTER);
     fill(255);
     if (exploding && explOpacity == 255) {
-      l.update(explColor);
+      damaging = true;
     }
     if (exploding) {
       fill(explColor, explOpacity);
       ellipse(getLocation().x, getLocation().y, explSize, explSize);
+      if (damaging) {
+        for (Tank tank: players) {
+          if (getLocation().x + explSize/2 >= tank.b.getVertex(0).x &&
+          getLocation().x - explSize/2 <= tank.b.getVertex(2).x &&
+          getLocation().y + explSize/2 >= tank.b.getVertex(0).y &&
+          getLocation().y - explSize/2 <= tank.b.getVertex(2).y) { // standard collision physics - very copypasteable
+            tank.health -= damage;
+            hit.add(tank);
+            damaging = false;
+            dmgNum = createGraphics(20, 20);
+            dmgNum.beginDraw();
+            dmgNum.stroke(0);
+            dmgNum.fill(255);
+            dmgNum.textFont(f, 14);
+            dmgNum.textAlign(CENTER, CENTER);
+            dmgNum.text(damage, 10, 10);
+            dmgNum.endDraw();
+          }
+        }
+      } else {
+        dmgNum.beginDraw();
+        dmgNum.fill(0, 6);
+        dmgNum.textFont(f, 14);
+        dmgNum.text(damage, 10, 10);
+        dmgNum.endDraw();
+        for (Tank tank: hit) { 
+          image(dmgNum, tank.x - 10, 
+          tank.y - 50);
+        }
+      }
     } else {
       strokeWeight(1);
       stroke(0);
@@ -97,8 +129,10 @@ class Shot extends Weapon {
       }
       else {
         for (Tank t: players) {
-          if ((getLocation().x + weapSize/2 > t.b.getVertex(0).x) && (getLocation().x - weapSize/2 < t.b.getVertex(2).x) 
-          && (getLocation().y + weapSize/2 > t.b.getVertex(0).y) && (getLocation().y - weapSize/2 < t.b.getVertex(2).y)) {
+          if ((getLocation().x + weapSize/2 > t.b.getVertex(0).x) 
+          && (getLocation().x - weapSize/2 < t.b.getVertex(2).x) 
+          && (getLocation().y + weapSize/2 > t.b.getVertex(0).y) 
+          && (getLocation().y - weapSize/2 < t.b.getVertex(2).y)) { 
             explode(players);
             break;
           }
@@ -116,11 +150,7 @@ class Shot extends Weapon {
     fill(explColor, explOpacity);
     noStroke();
     ellipse(getLocation().x, getLocation().y, explSize, explSize);
-    for (Tank tank: players) {
-      if (getLocation().x + explSize/2 >= tank.b.getVertex(0).x && getLocation().x - explSize/2 <= tank.b.getVertex(2).x && getLocation().y + explSize/2 >= tank.b.getVertex(0).y && getLocation().y - explSize/2 <= tank.b.getVertex(2).y) {
-        tank.health -= damage;
-      }
-    }
+    l.update(explColor);
     exploding = true;
   }
 }
@@ -157,3 +187,7 @@ class MassiveShot extends Shot {
     damage = 30;
   }
 }
+
+//************************************************************//
+//************************************************************//
+//************************************************************//

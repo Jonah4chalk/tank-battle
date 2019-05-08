@@ -6,11 +6,13 @@ Tank tester;
 Tank opponent;
 Terrain l;
 color backgroundColor = color(0);
-color terrColor = color(240);
+color terrColor = color(200);
 int tankTurn;
 PFont f;
+int state;
 
 void setup() {
+  state = 1;
   fullScreen();
   frameRate(60);
   f = loadFont("Symbol-48.vlw");
@@ -25,53 +27,107 @@ void setup() {
 
 
 void draw() {
-  background(backgroundColor);
-  l.display();
-  players.get(tankTurn).update();
-  float p = mag(players.get(tankTurn).power.x, players.get(tankTurn).power.y);
-  textFont(f, 16);
-  textAlign(CENTER);
-  fill(255);
-  if (players.get(tankTurn).bullets.size() == 0) {
-    text(((players.get(tankTurn).currentNozzleAngle != 0) 
-    ? -players.get(tankTurn).currentNozzleAngle : players.get(tankTurn).currentNozzleAngle) 
-    + ", " + nfc(p, 1), players.get(tankTurn).center.x, players.get(tankTurn).center.y - 20);
+  if (state == 0) {
+    strokeWeight(1);
+    stroke(0);
+    rectMode(CENTER);
+    background(250);
+    fill(255, 0, 0, 150);
+    rect(width/2, height/5, width/5, height/10);
+    rect(width/2, height/5 + height/6, width/5, height/10);
+    rect(width/2, height/5 + height/3, width/5, height/10);
+    rect(width/2, height/5 + height/2, width/5, height/10);
+    fill(0);
+    textAlign(CENTER, CENTER);
+    textFont(f, 30);
+    text("Play", width/2, height/5);
+    text("How to Play", width/2, height/5 + height/6);
+    text("Credits", width/2, height/5 + height/3);
+    text("Quit", width/2, height/5 + height/2);
   }
-  for (int t = 0; t < players.size(); t++) {
-    if (t != tankTurn) {
-      players.get(t).update();
+  else if (state == 1) {
+    background(backgroundColor);
+    l.display();
+    players.get(tankTurn).update();
+    float p = mag(players.get(tankTurn).power.x, players.get(tankTurn).power.y);
+    textFont(f, 16);
+    textAlign(CENTER);
+    fill(255);
+    if (players.get(tankTurn).bullets.size() == 0) {
+      text(((players.get(tankTurn).currentNozzleAngle != 0) 
+      ? -players.get(tankTurn).currentNozzleAngle : players.get(tankTurn).currentNozzleAngle) 
+      + ", " + nfc(p, 1), players.get(tankTurn).center.x, players.get(tankTurn).center.y - 20);
     }
-  }
-  for (Tank t: players) {
-    t.wUpdate();
-  }
-  if (players.get(tankTurn).bullets.size() > 0) {
-    if (!players.get(tankTurn).bullets.get(0).inFlight) {
-      players.get(tankTurn).bullets.remove(0);
-      tankTurn++;
-      if (tankTurn >= players.size()) {
-        tankTurn = 0;
+    for (int t = 0; t < players.size(); t++) {
+      if (t != tankTurn) {
+        players.get(t).update();
       }
-      players.get(tankTurn).fuel = 30;
+    }
+    for (Tank t: players) {
+      t.wUpdate();
+    }
+    if (players.get(tankTurn).bullets.size() > 0) {
+      if (!players.get(tankTurn).bullets.get(0).inFlight) {
+        players.get(tankTurn).bullets.remove(0);
+        int remaining = players.size();
+        for (Tank t: players) {
+          if (!t.isAlive) {
+            remaining--;
+          }
+        }
+        if (remaining <= 1) {
+          state = 2;
+        }
+        tankTurn++;
+        if (tankTurn >= players.size()) {
+            tankTurn = 0;
+          }
+        while (!players.get(tankTurn).isAlive) {
+          tankTurn++;
+          if (tankTurn >= players.size()) {
+            tankTurn = 0;
+          }
+        }
+        players.get(tankTurn).fuel = players.get(tankTurn).maxFuel;
+      }
     }
   }
-}
-
-void keyPressed() {
-  if (players.get(tankTurn).bullets.size() == 0) {
-    players.get(tankTurn).setMove(keyCode, true);
-    if (key == 's' || key == 'S') {
-      players.get(tankTurn).setMove('d', false);
-      players.get(tankTurn).setMove('a', false);
-      players.get(tankTurn).setMove(LEFT, false);
-      players.get(tankTurn).setMove(RIGHT, false);
-      players.get(tankTurn).setMove(UP, false);
-      players.get(tankTurn).setMove(DOWN, false);
-      players.get(tankTurn).shoot();
+  else if (state == 2) {
+    background(255);
+    textFont(f, 64);
+    int i;
+    for (i = 0; !players.get(i).isAlive; i++) {
+      continue;
     }
+    fill(0, 255, 0);
+    text("Player " + (players.get(i).id + 1) + " wins!", width/2, height/3);
+    fill(255, 0, 0, 150);
+    //rectMode(CENTER);
+    //rect(width/2, height/5 + height/2, width/5, height/10);
   }
 }
+  
+  void keyPressed() {
+    if (state == 1) {
+      if (players.get(tankTurn).bullets.size() == 0) {
+        players.get(tankTurn).setMove(keyCode, true);
+        if (key == 's' || key == 'S') {
+          players.get(tankTurn).setMove('d', false);
+          players.get(tankTurn).setMove('a', false);
+          players.get(tankTurn).setMove(LEFT, false);
+          players.get(tankTurn).setMove(RIGHT, false);
+          players.get(tankTurn).setMove(UP, false);
+          players.get(tankTurn).setMove(DOWN, false);
+          players.get(tankTurn).setMove('q', false);
+          players.get(tankTurn).setMove('e', false);
+          players.get(tankTurn).shoot();
+        }
+      }
+    }
+  }
 
 void keyReleased() {
-  players.get(tankTurn).setMove(keyCode, false);
+  if (state == 1) {
+    players.get(tankTurn).setMove(keyCode, false);
+  }
 }
