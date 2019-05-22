@@ -155,8 +155,8 @@ public class Tank {
     if (health <= 0) {
       health = 0;
       fuel = 0;
-      b.setFill(color(0));
-      n.setFill(color(0));
+      b.setFill(color(120));
+      n.setFill(color(120));
     }
     colorMode(RGB, 255, 255, 255);
     
