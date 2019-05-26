@@ -67,6 +67,7 @@ class Shot extends Weapon {
     if (exploding && explOpacity == 255) {
       damaging = true;
     }
+    
     if (exploding) {
       fill(explColor, explOpacity);
       ellipse(getLocation().x, getLocation().y, explSize, explSize);
@@ -120,10 +121,16 @@ class Shot extends Weapon {
       getVelocity().add(getAcceleration());
       //println(int(loc.x + (loc.y*width)));
       loadPixels();
-      color detector = get(int(getLocation().x), int(getLocation().y));
+      PVector NormVelocity = new PVector();
+      NormVelocity = getVelocity().normalize(null);
+      NormVelocity.setMag(weapSize/2);
+      color detector = get(int(getLocation().x + NormVelocity.x), int(getLocation().y + NormVelocity.y));
+      /* stroke(123, 254, 39);
+      ellipse(int(getLocation().x + NormVelocity.x), int(getLocation().y + NormVelocity.y), 5, 5);
+      stroke(0); */
       if (getLocation().x < 0 || getLocation().x > width || getLocation().y > height) {
         inFlight = false;
-      } 
+      }
       else if (getLocation().y < 0) { // prevents detector from trying to check colors offscreen
         inFlight = true;
       }
@@ -189,5 +196,56 @@ class MassiveShot extends Shot {
 }
 
 //************************************************************//
+//****************************FLARE***************************//
 //************************************************************//
-//************************************************************//
+/*
+class Flare extends Weapon {
+  
+  Flare(PVector loc, PVector vel) {
+    super(loc, vel);
+    explColor = color(255);
+    explSize = 0;
+    weapSize = 8;
+    damage = 0;
+  }
+  
+  void display() {
+    ellipseMode(CENTER);
+    fill(255);
+    
+  }
+  
+  void update(ArrayList<Tank> players) {
+    if (exploding) {
+      if (explOpacity <= 0) {
+        inFlight = false;
+      } else {
+        explOpacity -= 2;
+      }
+    } 
+    else {
+      getLocation().add(getVelocity());
+      getVelocity().add(getAcceleration());
+      //println(int(loc.x + (loc.y*width)));
+      loadPixels();
+      color detector = get(int(getLocation().x), int(getLocation().y));
+      if (getLocation().x < 0 || getLocation().x > width || getLocation().y > height) {
+        inFlight = false;
+      }
+      else if (getLocation().y < 0) { // prevents detector from trying to check colors offscreen
+        inFlight = true;
+      }
+      else {
+          if (exploding == false) {
+            if (detector == terrColor) {
+              
+          }
+        }
+      }
+    }
+  }
+  
+  void explode(ArrayList<Tank> players) {
+    
+  }
+} */

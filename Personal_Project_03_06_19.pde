@@ -4,6 +4,7 @@ import java.util.Collections;
 ArrayList<Tank> players = new ArrayList<Tank>();
 Tank tester;
 Tank opponent;
+Tank third;
 Terrain l;
 color backgroundColor = color(0);
 color terrColor = color(200);
@@ -18,9 +19,11 @@ void setup() {
   f = loadFont("Symbol-48.vlw");
   tester = new Tank(0, 100, height - 10);
   opponent = new Tank(1, 150, height - 10);
+  third = new Tank(2, 250, height - 10);
   l = new Terrain();
   players.add(tester);
   players.add(opponent);
+  players.add(third);
   Collections.shuffle(players);
   tankTurn = 0;
 }
@@ -54,9 +57,19 @@ void draw() {
     textAlign(CENTER);
     fill(255);
     if (players.get(tankTurn).bullets.size() == 0) {
-      text(((players.get(tankTurn).currentNozzleAngle != 0) 
-      ? -players.get(tankTurn).currentNozzleAngle : players.get(tankTurn).currentNozzleAngle) 
-      + ", " + nfc(p, 1), players.get(tankTurn).center.x, players.get(tankTurn).center.y - 20);
+      float angleNum = players.get(tankTurn).currentNozzleAngle;
+      if (angleNum <= -270) {
+        angleNum = 360 + angleNum;
+      } else if (angleNum <= -90) {
+        angleNum = -180 - angleNum;
+      } else if (angleNum <= 90) {
+        // do nothing
+      } else if (angleNum <= 270) {
+        angleNum = 180 - angleNum;
+      } else {
+        angleNum = -360 + angleNum;
+      }
+      text((angleNum != 0 ? -angleNum : angleNum) + ", " + nfc(p, 1), players.get(tankTurn).center.x, players.get(tankTurn).center.y - 20);
     }
     for (int t = 0; t < players.size(); t++) {
       if (t != tankTurn) {
@@ -102,8 +115,10 @@ void draw() {
     fill(0, 255, 0);
     text("Player " + (players.get(i).id + 1) + " wins!", width/2, height/3);
     fill(255, 0, 0, 150);
-    //rectMode(CENTER);
-    //rect(width/2, height/5 + height/2, width/5, height/10);
+    rectMode(CENTER);
+    rect(width/2, height/5 + height/2, width/5, (3/4) * height);
+    textFont(f, 30);
+    text("Back to main", width/5, (3/4) * height);
   }
 }
   

@@ -3,7 +3,6 @@ public class Terrain {
   PShape terrain;
   float yoff = 0;
   float xoff = 0;
-  
   Terrain() {
     terrain = createShape();
     terrain.setFill(terrColor);
@@ -11,7 +10,7 @@ public class Terrain {
     // Iterate over horizontal pixels
     for (float x = 0; x <= width; x++) {
       // Calculate a y value according to noise, map to 
-      float y = map((noise(xoff, yoff)*height), 0, height, 10, height - 30);
+      float y = map((noise(xoff, yoff)*height), 0, height, 10, (height*7/10));
       
       // Set the vertex
       terrain.vertex(x, y);
