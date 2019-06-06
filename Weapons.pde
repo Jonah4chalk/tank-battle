@@ -198,7 +198,7 @@ class MassiveShot extends Shot {
 //************************************************************//
 //****************************FLARE***************************//
 //************************************************************//
-/*
+
 class Flare extends Weapon {
   
   Flare(PVector loc, PVector vel) {
@@ -212,7 +212,9 @@ class Flare extends Weapon {
   void display() {
     ellipseMode(CENTER);
     fill(255);
-    
+    strokeWeight(1);
+    stroke(0);
+    ellipse(getLocation().x, getLocation().y, weapSize, weapSize);
   }
   
   void update(ArrayList<Tank> players) {
@@ -228,7 +230,16 @@ class Flare extends Weapon {
       getVelocity().add(getAcceleration());
       //println(int(loc.x + (loc.y*width)));
       loadPixels();
-      color detector = get(int(getLocation().x), int(getLocation().y));
+      
+      PVector NormVelocity = new PVector();
+      NormVelocity = getVelocity().normalize(null);
+      NormVelocity.setMag(weapSize/2);
+      
+      // Find the pixel on the edge of the bullet in the direction it's travelling, and check the color of the background there
+      int x_detect = int(getLocation().x + NormVelocity.x);
+      int y_detect = int(getLocation().y + NormVelocity.y);
+      color detector = get(x_detect, y_detect);
+      
       if (getLocation().x < 0 || getLocation().x > width || getLocation().y > height) {
         inFlight = false;
       }
@@ -238,7 +249,24 @@ class Flare extends Weapon {
       else {
           if (exploding == false) {
             if (detector == terrColor) {
+              // Find how steep the ground is at the point of contact
+              float left_h = l.terrain.getVertex(x_detect - 1).y;
+              float right_h = l.terrain.getVertex(x_detect + 1).y;
+              PVector TerrSlope_2 = new PVector(x_detect+1, right_h);
+              PVector TerrSlope_1 = new PVector(x_detect-1, left_h);
+              PVector TerrSlope = new PVector();
+              TerrSlope = TerrSlope_2.sub(TerrSlope_1);
               
+              float a = atan2(getVelocity().y, getVelocity().x) - atan2(TerrSlope.y, TerrSlope.x);
+
+              if (a <= PI/2) {
+                getVelocity().rotate(-2*a);
+              }
+              else if (a > PI/2 && a <= PI) {
+                getVelocity().rotate(2*(PI-a));
+              }
+              // println(degrees(a));
+              getVelocity().setMag(getVelocity().mag()/1.75); // Add "friction" to the ground to slow the flare down
           }
         }
       }
@@ -248,4 +276,4 @@ class Flare extends Weapon {
   void explode(ArrayList<Tank> players) {
     
   }
-} */
+}
