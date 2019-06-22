@@ -125,9 +125,11 @@ class Shot extends Weapon {
       NormVelocity = getVelocity().normalize(null);
       NormVelocity.setMag(weapSize/2);
       color detector = get(int(getLocation().x + NormVelocity.x), int(getLocation().y + NormVelocity.y));
+      
       /* stroke(123, 254, 39);
       ellipse(int(getLocation().x + NormVelocity.x), int(getLocation().y + NormVelocity.y), 5, 5);
       stroke(0); */
+      
       if (getLocation().x < 0 || getLocation().x > width || getLocation().y > height) {
         inFlight = false;
       }
@@ -207,25 +209,31 @@ class Flare extends Weapon {
     explSize = 0;
     weapSize = 8;
     damage = 0;
+    damaging = false; // Flares by nature cannot damage other tanks
   }
   
   void display() {
-    ellipseMode(CENTER);
+   ellipseMode(CENTER);
     fill(255);
-    strokeWeight(1);
-    stroke(0);
-    ellipse(getLocation().x, getLocation().y, weapSize, weapSize);
+    
+    if (exploding) {
+      fill(explColor, explOpacity);
+      ellipse(getLocation().x, getLocation().y, explSize, explSize);
+    } else {
+      strokeWeight(1);
+      stroke(0);
+      ellipse(getLocation().x, getLocation().y, weapSize, weapSize);
+    }
   }
   
   void update(ArrayList<Tank> players) {
+    int numOfBounces = 0;
+    
     if (exploding) {
       if (explOpacity <= 0) {
         inFlight = false;
-      } else {
-        explOpacity -= 2;
       }
-    } 
-    else {
+    } else {
       getLocation().add(getVelocity());
       getVelocity().add(getAcceleration());
       //println(int(loc.x + (loc.y*width)));
@@ -249,6 +257,8 @@ class Flare extends Weapon {
       else {
           if (exploding == false) {
             if (detector == terrColor) {
+              ++numOfBounces;
+              
               // Find how steep the ground is at the point of contact
               float left_h = l.terrain.getVertex(x_detect - 1).y;
               float right_h = l.terrain.getVertex(x_detect + 1).y;
@@ -266,14 +276,44 @@ class Flare extends Weapon {
                 getVelocity().rotate(2*(PI-a));
               }
               // println(degrees(a));
-              getVelocity().setMag(getVelocity().mag()/1.75); // Add "friction" to the ground to slow the flare down
-          }
+              //println(getVelocity().mag());
+              if (getVelocity().mag() < 0.2 && numOfBounces < 3) {
+                explode(players);
+              }
+              else {
+                getVelocity().setMag(getVelocity().mag()/2.67); // Add "friction" to the ground to slow the flare down
+              }
+          }         
         }
       }
     }
   }
   
   void explode(ArrayList<Tank> players) {
+    // Default
+    fill(explColor, explOpacity);
+    noStroke();
+    ellipse(getLocation().x, getLocation().y, explSize, explSize);
+    l.update(explColor);
+    exploding = true;
+  }
+}
+
+class DropShot extends Flare {
+  DropShot(PVector loc, PVector vel) {
+    super(loc, vel);
+    explColor = color(255, 0, 0);
+  }
+  
+  void explode(ArrayList<Tank> players) {
+    fill(explColor, explOpacity);
+    noStroke();
+    ellipse(getLocation().x, getLocation().y, explSize, explSize);
+    l.update(explColor);
+    exploding = true;
     
+    PVector launch_vec = new PVector(getLocation().x, 0).sub(getLocation());
+    Weapon b = new Shot(launch_vec, new PVector(0, 0));
+    bullets.add(b);
   }
 }
