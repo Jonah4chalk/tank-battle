@@ -204,7 +204,7 @@ public class Tank {
   
   void fillInventory() {
     for (int i = 0; i < 20; i++) { //max number is final inventory size
-      int rand = int(random(4)); // for now this has to be equal to the number of weapons available
+      /* int rand = int(random(4)); // for now this has to be equal to the number of weapons available
       Weapon w = new Shot(nozVec, power);
       switch(rand) { // this switch needs to contain every weapon
         case 0:
@@ -219,7 +219,11 @@ public class Tank {
         case 3:
           w = new MassiveShot(nozVec, power);
           break;
-      }
+        case 4:
+          w = new Flare(nozVec, power);
+          break;
+      } */
+      Weapon w = new Flare(nozVec, power);
       inventory.add(w);
     }
   }
