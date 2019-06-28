@@ -12,13 +12,13 @@ PFont f;
 int state;
 
 void setup() {
-  state = 0;
+  state = 1;
   fullScreen();
   frameRate(60);
   f = loadFont("Symbol-48.vlw");
   tester = new Tank(0, 100, height - 10);
   opponent = new Tank(1, 150, height - 10);
-  l = new Terrain();
+  l = new Terrain();                                // l is defined as the terrain shape
   players.add(tester);
   players.add(opponent);
   Collections.shuffle(players);
@@ -55,7 +55,7 @@ void draw() {
     textFont(f, 16);
     textAlign(CENTER);
     fill(255);
-    if (players.get(tankTurn).bullets.size() == 0) {
+    if (players.get(tankTurn).bullets.size() == 0 && players.get(tankTurn).projectiles.size() == 0) {
       text(((players.get(tankTurn).currentNozzleAngle != 0) 
       ? -players.get(tankTurn).currentNozzleAngle : players.get(tankTurn).currentNozzleAngle) 
       + ", " + nfc(p, 1), players.get(tankTurn).center.x, players.get(tankTurn).center.y - 20);
@@ -68,32 +68,36 @@ void draw() {
     for (Tank t: players) {
       t.wUpdate();
     }
-    if (players.get(tankTurn).bullets.size() > 0) {
-      if (!players.get(tankTurn).bullets.get(0).inFlight) {
-        players.get(tankTurn).bullets.remove(0);
-        int remaining = players.size();
-        for (Tank t: players) {
-          if (!t.isAlive) {
-            remaining--;
-          }
+    
+    if (players.get(tankTurn).projectiles.size() > 0 && !players.get(tankTurn).projectiles.get(0).inFlight) {
+      players.get(tankTurn).projectiles.remove(0);
+    }
+      
+    else if (players.get(tankTurn).bullets.size() > 0 && !players.get(tankTurn).bullets.get(0).inFlight) {
+      players.get(tankTurn).bullets.remove(0);
+      int remaining = players.size();
+      for (Tank t: players) {
+        if (!t.isAlive) {
+          remaining--;
         }
-        if (remaining <= 1) {
-          state = 2;
-        }
+      }
+      if (remaining <= 1) {
+        state = 2;
+      }
+      tankTurn++;
+      if (tankTurn >= players.size()) {
+          tankTurn = 0;
+      }
+      while (!players.get(tankTurn).isAlive) {
         tankTurn++;
         if (tankTurn >= players.size()) {
-            tankTurn = 0;
-          }
-        while (!players.get(tankTurn).isAlive) {
-          tankTurn++;
-          if (tankTurn >= players.size()) {
-            tankTurn = 0;
-          }
+          tankTurn = 0;
         }
-        players.get(tankTurn).fuel = players.get(tankTurn).maxFuel;
       }
+        players.get(tankTurn).fuel = players.get(tankTurn).maxFuel;
     }
   }
+    
   else if (state == 2) {
     background(255);
     textFont(f, 64);
@@ -111,7 +115,7 @@ void draw() {
   
   void keyPressed() {
     if (state == 1) {
-      if (players.get(tankTurn).bullets.size() == 0) {
+      if (players.get(tankTurn).bullets.size() == 0 && players.get(tankTurn).projectiles.size() == 0) {
         players.get(tankTurn).setMove(keyCode, true);
         if (key == 's' || key == 'S') {
           players.get(tankTurn).setMove('d', false);
