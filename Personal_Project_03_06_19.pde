@@ -18,7 +18,7 @@ void setup() {
   f = loadFont("Symbol-48.vlw");
   tester = new Tank(0, 100, height - 10);
   opponent = new Tank(1, 150, height - 10);
-  l = new Terrain();
+  l = new Terrain();                                // l is defined as the terrain shape
   players.add(tester);
   players.add(opponent);
   Collections.shuffle(players);
@@ -47,15 +47,18 @@ void draw() {
     textFont(f, 64);
     text("Insert Game Title Here", width/2, height/5);
   }
+  
   else if (state == 1) {  // the game state
     background(backgroundColor);
     l.display();
     players.get(tankTurn).update();
+    HUD(players);
     float p = mag(players.get(tankTurn).power.x, players.get(tankTurn).power.y);
     textFont(f, 16);
     textAlign(CENTER);
+    rectMode(CORNER);
     fill(255);
-    if (players.get(tankTurn).bullets.size() == 0) {
+    if (players.get(tankTurn).bullets.size() == 0 && players.get(tankTurn).projectiles.size() == 0) {
       text(((players.get(tankTurn).currentNozzleAngle != 0) 
       ? -players.get(tankTurn).currentNozzleAngle : players.get(tankTurn).currentNozzleAngle) 
       + ", " + nfc(p, 1), players.get(tankTurn).center.x, players.get(tankTurn).center.y - 20);
@@ -68,33 +71,37 @@ void draw() {
     for (Tank t: players) {
       t.wUpdate();
     }
-    if (players.get(tankTurn).bullets.size() > 0) {
-      if (!players.get(tankTurn).bullets.get(0).inFlight) {
-        players.get(tankTurn).bullets.remove(0);
-        int remaining = players.size();
-        for (Tank t: players) {
-          if (!t.isAlive) {
-            remaining--;
-          }
+    
+    if (players.get(tankTurn).projectiles.size() > 0 && !players.get(tankTurn).projectiles.get(0).inFlight) {
+      players.get(tankTurn).projectiles.remove(0);
+    }
+      
+    else if (players.get(tankTurn).bullets.size() > 0 && !players.get(tankTurn).bullets.get(0).inFlight) {
+      players.get(tankTurn).bullets.remove(0);
+      int remaining = players.size();
+      for (Tank t: players) {
+        if (!t.isAlive) {
+          remaining--;
         }
-        if (remaining <= 1) {
-          state = 2;
-        }
+      }
+      if (remaining <= 1) {
+        state = 2;
+      }
+      tankTurn++;
+      if (tankTurn >= players.size()) {
+          tankTurn = 0;
+      }
+      while (!players.get(tankTurn).isAlive) {
         tankTurn++;
         if (tankTurn >= players.size()) {
-            tankTurn = 0;
-          }
-        while (!players.get(tankTurn).isAlive) {
-          tankTurn++;
-          if (tankTurn >= players.size()) {
-            tankTurn = 0;
-          }
+          tankTurn = 0;
         }
-        players.get(tankTurn).fuel = players.get(tankTurn).maxFuel;
       }
+        players.get(tankTurn).fuel = players.get(tankTurn).maxFuel;
     }
   }
-  else if (state == 2) {
+    
+  else if (state == 2) { // The game over state
     background(255);
     textFont(f, 64);
     int i;
@@ -108,28 +115,84 @@ void draw() {
     //rect(width/2, height/5 + height/2, width/5, height/10);
   }
 }
-  
-  void keyPressed() {
-    if (state == 1) {
-      if (players.get(tankTurn).bullets.size() == 0) {
-        players.get(tankTurn).setMove(keyCode, true);
-        if (key == 's' || key == 'S') {
-          players.get(tankTurn).setMove('d', false);
-          players.get(tankTurn).setMove('a', false);
-          players.get(tankTurn).setMove(LEFT, false);
-          players.get(tankTurn).setMove(RIGHT, false);
-          players.get(tankTurn).setMove(UP, false);
-          players.get(tankTurn).setMove(DOWN, false);
-          players.get(tankTurn).setMove('q', false);
-          players.get(tankTurn).setMove('e', false);
-          players.get(tankTurn).shoot();
-        }
+    
+void keyPressed() {  
+  if (state == 1) {  
+    if (players.get(tankTurn).bullets.size() == 0 && players.get(tankTurn).projectiles.size() == 0) {  
+      players.get(tankTurn).setMove(keyCode, true);
+      if (key == 's' || key == 'S') {  
+        players.get(tankTurn).setMove('d', false);  
+        players.get(tankTurn).setMove('a', false);  
+        players.get(tankTurn).setMove(LEFT, false);  
+        players.get(tankTurn).setMove(RIGHT, false);  
+        players.get(tankTurn).setMove(UP, false);  
+        players.get(tankTurn).setMove(DOWN, false);  
+        players.get(tankTurn).setMove('q', false);  
+        players.get(tankTurn).setMove('e', false);  
+        players.get(tankTurn).shoot();  
       }
-    }
-  }
+    }  
+  }  
+}
 
 void keyReleased() {
   if (state == 1) {
     players.get(tankTurn).setMove(keyCode, false);
+  }
+}
+
+// Why does this cause the status bars to glitch?
+void mouseClicked() {
+  switch(state) {
+    case(0):
+      if (mouseX < 7*width/10 && mouseX > 3*width/10) {
+        if (mouseY < 14*height/30 && mouseY > 8*height/30) {
+          state = 1;
+          break;
+        }
+      }
+  }
+}
+
+void HUD(ArrayList<Tank> players) {
+  Tank player = players.get(tankTurn);
+  rectMode(CORNERS);
+  fill(175);
+  rect(0, 7*height/10, width, height);
+  
+  // Status bars
+  stroke(0);
+  strokeWeight(1);
+  rect(width/15, 23*height/30, 9*width/30, 12*height/15);
+  rect(width/15, 27*height/30, 9*width/30, 14*height/15);
+  fill(0, 255, 0);
+  rect(width/15, 23*height/30, map(player.health, 0, player.maxHealth, width/15, 9*width/30), 12*height/15);
+  fill(0, 0, 255);
+  rect(width/15, 27*height/30, map(player.fuel, 0, player.maxFuel, width/15, 9*width/30), 14*height/15);
+  fill(0);
+  textAlign(CENTER, CENTER);
+  textFont(f, 30);
+  String hpMessage = "Health: " + str(player.health) + "/" + str(player.maxHealth);
+  String fuelMessage = "Fuel: " + str(player.fuel) + "/" + str(player.maxFuel);
+  text(hpMessage, 11*width/60, 11*height/15);
+  text(fuelMessage, 11*width/60, 13*height/15);
+  
+  // Fire button
+  fill(player.c);
+  rect(11*width/30, 8*height/10, 19*width/30, 9*height/10);
+  textAlign(CENTER, CENTER);
+  textFont(f, 60);
+  fill(0);
+  text("F I R E", width/2, 17*height/20);
+  
+  // Weapon select
+  fill(0);
+  rect(21*width/30, 8*height/10, 14*width/15, 9*height/10);
+  fill(255);
+  if (player.selection >= player.weapons.size()) {
+    text(player.flares.get(player.selection - player.weapons.size()).name, 49*width/60, 17*height/20);
+  }
+  else {
+    text(player.weapons.get(player.selection).name, 49*width/60, 17*height/20);
   }
 }
