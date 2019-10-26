@@ -1,13 +1,15 @@
 public class Tank {
-  ArrayList<Weapon> bullets = new ArrayList<Weapon>();
-  ArrayList<Weapon> inventory = new ArrayList<Weapon>();
+  ArrayList<Weapon> bullets = new ArrayList<Weapon>(); // Track weapons in flight
+  ArrayList<Flare> projectiles = new ArrayList<Flare>(); // Track flares in flight
+  ArrayList<Weapon> weapons = new ArrayList<Weapon>(); // Part of inventory
+  ArrayList<Flare> flares = new ArrayList<Flare>(); // Part of inventory
   int selection = 0;
   boolean isLeft, isRight, rotLeft, rotRight, powerUp, powerDown, isShooting, selectPrev, selectNext, isAlive;
   color c;
   PVector power, center, noz, nozVec;
-  PShape t;
-  PShape b;
-  PShape n;
+  PShape tank;
+  PShape body;
+  PShape nozzle;
   int x, y;
   final float aChange = 1, powerChange = 0.03;
   final int speed = 1;
@@ -23,6 +25,8 @@ public class Tank {
     maxHealth = health;
     fuel = 150;
     maxFuel = fuel;
+    
+    // Determines what colour each tank will be.
     switch(Id % 4) {
       case 0:
         c = color(255, 255, 0);
@@ -45,25 +49,25 @@ public class Tank {
     nozVec = PVector.sub(noz, center);
     power = new PVector(5, 0);
     strokeWeight(0);
-    t = createShape(GROUP);
-    n = createShape();
-    n.beginShape();
-    n.vertex(center.x, noz.y - 1);
-    n.vertex(center.x, noz.y + 1);
-    n.vertex(noz.x, noz.y + 1);
-    n.vertex(noz.x, noz.y - 1);
-    n.endShape(CLOSE);
-    n.setFill(c);
-    b = createShape();
-    b.beginShape();
-    b.vertex(x - 15, y - 6);
-    b.vertex(x + 15, y - 6);
-    b.vertex(x + 15, y + 6);
-    b.vertex(x - 15, y + 6);
-    b.endShape(CLOSE);
-    b.setFill(c);
-    t.addChild(n);
-    t.addChild(b);
+    tank = createShape(GROUP);
+    nozzle = createShape();
+    nozzle.beginShape();
+    nozzle.vertex(center.x, noz.y - 1);
+    nozzle.vertex(center.x, noz.y + 1);
+    nozzle.vertex(noz.x, noz.y + 1);
+    nozzle.vertex(noz.x, noz.y - 1);
+    nozzle.endShape(CLOSE);
+    nozzle.setFill(c);
+    body = createShape();
+    body.beginShape();
+    body.vertex(x - 15, y - 6);
+    body.vertex(x + 15, y - 6);
+    body.vertex(x + 15, y + 6);
+    body.vertex(x - 15, y + 6);
+    body.endShape(CLOSE);
+    body.setFill(c);
+    tank.addChild(nozzle);
+    tank.addChild(body);
     fillInventory();
   }
   
@@ -103,12 +107,12 @@ public class Tank {
   }
   
   void update() {
-    
     //************************* POSITION *************************//
     if (currentNozzleAngle >= 360 || currentNozzleAngle <= -360) {
       currentNozzleAngle = 0;
     }
     power.x = constrain(power.x + (powerChange*(int(powerUp) - int(powerDown))), 0.1, 10);
+    
     if (isLeft != isRight) {
       if (fuel == 0) {
         isLeft = false;
@@ -117,10 +121,12 @@ public class Tank {
         fuel--;
       }
     }
+    
     x = constrain(x + speed*(int(isLeft) - int(isRight)), 12, width - 12);
     currentNozzleAngle += aChange*(int(rotRight) - int(rotLeft));
     y = int(l.terrain.getVertex(x).y);
     center.set(x, y);
+    
     noz.set(x + 25, y);
     nozVec = PVector.sub(noz, center);
     float nx, ny;
@@ -133,16 +139,17 @@ public class Tank {
     nozVec.add(center);
     //println(nozVec);
     //noLoop();
-    b.setVertex(0, center.x - 15, center.y - 6);
-    b.setVertex(1, center.x + 15, center.y - 6);
-    b.setVertex(2, center.x + 15, center.y + 6);
-    b.setVertex(3, center.x - 15, center.y + 6);
-    n.setVertex(0, center.x + sinAngle, y - cosAngle);
-    n.setVertex(1, center.x - sinAngle, y + cosAngle);
-    n.setVertex(2, nozVec.x - sinAngle , nozVec.y + cosAngle);
-    n.setVertex(3, nozVec.x + sinAngle, nozVec.y - cosAngle);
+    
+    body.setVertex(0, center.x - 15, center.y - 6);
+    body.setVertex(1, center.x + 15, center.y - 6);
+    body.setVertex(2, center.x + 15, center.y + 6);
+    body.setVertex(3, center.x - 15, center.y + 6);
+    nozzle.setVertex(0, center.x + sinAngle, y - cosAngle);
+    nozzle.setVertex(1, center.x - sinAngle, y + cosAngle);
+    nozzle.setVertex(2, nozVec.x - sinAngle , nozVec.y + cosAngle);
+    nozzle.setVertex(3, nozVec.x + sinAngle, nozVec.y - cosAngle);
     noStroke();
-    shape(t);
+    shape(tank);
     
     //************************** STATUS BARS **************************//
     colorMode(HSB, 255, 255, 255);
@@ -155,21 +162,22 @@ public class Tank {
     if (health <= 0) {
       health = 0;
       fuel = 0;
-      b.setFill(color(120));
-      n.setFill(color(120));
+      body.setFill(color(120));
+      nozzle.setFill(color(120));
     }
     colorMode(RGB, 255, 255, 255);
     
     //************************* INVENTORY *************************//
     
+    int inventorySize = weapons.size() + flares.size();
     selection += int(selectNext) - int(selectPrev);
     if (selection < 0) {
-        selection = inventory.size() - 1;
+        selection = inventorySize - 1;
       }
-    if (selection >= inventory.size()) {
+    if (selection >= inventorySize) {
         selection = 0;
       }
-    if (inventory.size() <= 5) {
+    if (inventorySize <= 5) {
       fillInventory();
     }
     //println(fuel);
@@ -181,6 +189,11 @@ public class Tank {
       w.update(players);
       strokeWeight(1);
       w.display();
+    }
+    for (Flare f: projectiles) {
+      f.update(players);
+      strokeWeight(1);
+      f.display();
     }
   }
   
@@ -195,15 +208,27 @@ public class Tank {
     velocity.x = nx;
     velocity.y = ny;
     //velocity is the vector that the projectile initially travels
-    Weapon b = inventory.get(selection);
-    b.setLocation(nozVec);
-    b.setVelocity(velocity);
-    bullets.add(b);
-    inventory.remove(selection);
+    
+    if (selection >= weapons.size()) {
+      selection -= weapons.size();
+      Flare f = flares.get(selection);
+      f.setLocation(nozVec);
+      f.setVelocity(velocity);
+      projectiles.add(f);
+      flares.remove(selection);
+      selection += weapons.size();
+    }
+    else {
+      Weapon b = weapons.get(selection);
+      b.setLocation(nozVec);
+      b.setVelocity(velocity);
+      bullets.add(b);
+      weapons.remove(selection);
+    }
   }
   
   void fillInventory() {
-    for (int i = 0; i < 20; i++) { //max number is final inventory size
+    for (int i = 0; i < 10; i++) { // max number is final inventory size
       int rand = int(random(4)); // for now this has to be equal to the number of weapons available
       Weapon w = new Shot(nozVec, power);
       switch(rand) { // this switch needs to contain every weapon
@@ -220,7 +245,13 @@ public class Tank {
           w = new MassiveShot(nozVec, power);
           break;
       }
-      inventory.add(w);
+      weapons.add(w);
+    }
+    
+    for (int i = 0; i < 10; i++) { // max number is final inventory size
+      int rand = int(random(1)); // for now this has to be equal to the number of weapons available
+      Flare f = new DropShot(nozVec, power);
+      flares.add(f);
     }
   }
 }
