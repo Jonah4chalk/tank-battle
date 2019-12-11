@@ -1,9 +1,8 @@
-// this would all go in one state of a state machine eventually
 import java.util.Collections;
 
 ArrayList<Tank> players = new ArrayList<Tank>();
-Tank tester;
-Tank opponent;
+Tank player1;
+Tank player2;
 Terrain l;
 color backgroundColor = color(0);
 color terrColor = color(200);
@@ -16,11 +15,11 @@ void setup() {
   fullScreen();
   frameRate(60);
   f = loadFont("Symbol-48.vlw");
-  tester = new Tank(0, 100, height - 10);
-  opponent = new Tank(1, 150, height - 10);
-  l = new Terrain();                                // l is defined as the terrain shape
-  players.add(tester);
-  players.add(opponent);
+  player1 = new Tank(0, 100, height - 10);
+  player2 = new Tank(1, 150, height - 10);
+  l = new Terrain(); // l is defined as the terrain shape
+  players.add(player1);
+  players.add(player2);
   Collections.shuffle(players);
   tankTurn = 0;
 }
@@ -58,7 +57,7 @@ void draw() {
     textAlign(CENTER);
     rectMode(CORNER);
     fill(255);
-    if (players.get(tankTurn).bullets.size() == 0 && players.get(tankTurn).projectiles.size() == 0) {
+    if (players.get(tankTurn).bullets.size() == 0 && players.get(tankTurn).bullets_from_bullets.size() == 0 && players.get(tankTurn).projectiles.size() == 0) {
       text(((players.get(tankTurn).currentNozzleAngle != 0) 
       ? -players.get(tankTurn).currentNozzleAngle : players.get(tankTurn).currentNozzleAngle) 
       + ", " + nfc(p, 1), players.get(tankTurn).center.x, players.get(tankTurn).center.y - 20);
@@ -68,37 +67,76 @@ void draw() {
         players.get(t).update();
       }
     }
-    for (Tank t: players) {
-      t.wUpdate();
+    for (Tank t: players) { 
+      t.wUpdate(); //update weapons for that Tank
     }
     
-    if (players.get(tankTurn).projectiles.size() > 0 && !players.get(tankTurn).projectiles.get(0).inFlight) {
-      players.get(tankTurn).projectiles.remove(0);
-    }
-      
-    else if (players.get(tankTurn).bullets.size() > 0 && !players.get(tankTurn).bullets.get(0).inFlight) {
-      players.get(tankTurn).bullets.remove(0);
-      int remaining = players.size();
-      for (Tank t: players) {
-        if (!t.isAlive) {
-          remaining--;
+    if (players.get(tankTurn).bullets.size() > 0) { // a player's turn can only be completed if their final bullet is consumed so this check is necessary
+      for (int i = 0; i < players.get(tankTurn).bullets.size(); i++) {
+        if (!players.get(tankTurn).bullets.get(0).inFlight) {
+          players.get(tankTurn).bullets.remove(i);
         }
       }
-      if (remaining <= 1) {
-        state = 2;
-      }
-      tankTurn++;
-      if (tankTurn >= players.size()) {
-          tankTurn = 0;
-      }
-      while (!players.get(tankTurn).isAlive) {
+      if (players.get(tankTurn).bullets.size() + players.get(tankTurn).bullets_from_bullets.size() == 0) {
+        int remaining = players.size();
+        for (Tank t: players) {
+          if (!t.isAlive) {
+            remaining--;
+          }
+        }
+        if (remaining <= 1) {
+          state = 2;
+        }
         tankTurn++;
         if (tankTurn >= players.size()) {
           tankTurn = 0;
         }
-      }
+        while (!players.get(tankTurn).isAlive) {
+          tankTurn++;
+          if (tankTurn >= players.size()) {
+            tankTurn = 0;
+          }
+        }
         players.get(tankTurn).fuel = players.get(tankTurn).maxFuel;
+      }
     }
+    
+    if (players.get(tankTurn).bullets_from_bullets.size() > 0) { // a player's turn can only be completed if their final bullet is consumed so this check is necessary
+      for (int i = 0; i < players.get(tankTurn).bullets_from_bullets.size(); i++) {
+        if (!players.get(tankTurn).bullets_from_bullets.get(0).inFlight) {
+          players.get(tankTurn).bullets_from_bullets.remove(i);
+        }
+      }
+      if (players.get(tankTurn).bullets.size() + players.get(tankTurn).bullets_from_bullets.size() == 0) {
+        int remaining = players.size();
+        for (Tank t: players) {
+          if (!t.isAlive) {
+            remaining--;
+          }
+        }
+        if (remaining <= 1) {
+          state = 2;
+        }
+        tankTurn++;
+        if (tankTurn >= players.size()) {
+            tankTurn = 0;
+        }
+        while (!players.get(tankTurn).isAlive) {
+          tankTurn++;
+          if (tankTurn >= players.size()) {
+            tankTurn = 0;
+          }
+        }
+      players.get(tankTurn).fuel = players.get(tankTurn).maxFuel;
+    }
+  } 
+    
+    
+    
+    /*else if (players.get(tankTurn).projectiles.size() > 0 && !players.get(tankTurn).projectiles.get(0).inFlight) {
+      players.get(tankTurn).projectiles.remove(0);
+    }*/
+    
   }
     
   else if (state == 2) { // The game over state
@@ -137,14 +175,33 @@ void keyPressed() {
 
 void keyReleased() {
   if (state == 1) {
-    players.get(tankTurn).setMove(keyCode, false);
+    Tank player = players.get(tankTurn);
+    player.setMove(keyCode, false);
+    if (keyCode == 'Q' || keyCode == 'q' || keyCode == 'E' || keyCode == 'e' ) {
+      int inventorySize = player.weapons.size();
+      if (keyCode == 'Q' || keyCode == 'q') {
+        player.selection++;
+      } else {
+        player.selection--;
+      }
+      if (player.selection < 0) {
+        player.selection = inventorySize - 1;
+      }
+      if (player.selection >= inventorySize) {
+        player.selection = 0;
+        println("SELECTION REVERSED");
+      }
+      if (inventorySize <= 5) {
+        player.fillInventory();
+      }
+    }
   }
 }
 
-// Why does this cause the status bars to glitch?
+//q: Why does this cause the status bars to glitch? update: glitch should be fixed now
 void mouseClicked() {
   switch(state) {
-    case(0):
+    case 0:
       if (mouseX < 7*width/10 && mouseX > 3*width/10) {
         if (mouseY < 14*height/30 && mouseY > 8*height/30) {
           state = 1;
@@ -189,10 +246,14 @@ void HUD(ArrayList<Tank> players) {
   fill(0);
   rect(21*width/30, 8*height/10, 14*width/15, 9*height/10);
   fill(255);
-  if (player.selection >= player.weapons.size()) {
-    text(player.flares.get(player.selection - player.weapons.size()).name, 49*width/60, 17*height/20);
+  /*if (player.selection >= player.weapons.size()) {
+    text(player.flares.get(player.selection - player.weapons.size()).name, 49*width/60, 17*height/20); //DANGER LINE!!!
   }
-  else {
+  else {*/
     text(player.weapons.get(player.selection).name, 49*width/60, 17*height/20);
-  }
+  //}
+  //test
+  /*println(player.weapons.size());
+  println(player.flares.size());
+  println(player.selection);*/
 }
