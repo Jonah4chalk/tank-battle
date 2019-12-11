@@ -131,12 +131,6 @@ void draw() {
     }
   } 
     
-    
-    
-    /*else if (players.get(tankTurn).projectiles.size() > 0 && !players.get(tankTurn).projectiles.get(0).inFlight) {
-      players.get(tankTurn).projectiles.remove(0);
-    }*/
-    
   }
     
   else if (state == 2) { // The game over state
@@ -246,14 +240,5 @@ void HUD(ArrayList<Tank> players) {
   fill(0);
   rect(21*width/30, 8*height/10, 14*width/15, 9*height/10);
   fill(255);
-  /*if (player.selection >= player.weapons.size()) {
-    text(player.flares.get(player.selection - player.weapons.size()).name, 49*width/60, 17*height/20); //DANGER LINE!!!
-  }
-  else {*/
-    text(player.weapons.get(player.selection).name, 49*width/60, 17*height/20);
-  //}
-  //test
-  /*println(player.weapons.size());
-  println(player.flares.size());
-  println(player.selection);*/
+  text(player.weapons.get(player.selection).name, 49*width/60, 17*height/20);
 }
