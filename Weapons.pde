@@ -56,7 +56,7 @@ class Shot extends Weapon {
   
   Shot(PVector loc, PVector vel) {
     super(loc, vel);
-    explColor = color(255);
+    explColor = color(255,145,0);
     explSize = 10;
     weapSize = 5;
     damage = 10;
@@ -170,7 +170,7 @@ class BigShot extends Shot {
   
   BigShot(PVector loc, PVector vel) {
     super(loc, vel);
-    explColor = color(255);
+    explColor = color(255,145,0);
     explSize = 18;
     weapSize = 9;
     damage = 15;
@@ -182,7 +182,7 @@ class HeavyShot extends Shot {
   
   HeavyShot(PVector loc, PVector vel) {
     super(loc, vel);
-    explColor = color(255);
+    explColor = color(255,145,0);
     explSize = 25;
     weapSize = 13;
     damage = 20;
@@ -194,7 +194,7 @@ class MassiveShot extends Shot {
   
   MassiveShot(PVector loc, PVector vel) {
     super(loc, vel);
-    explColor = color(255);
+    explColor = color(255,145,0);
     explSize = 35;
     weapSize = 20;
     damage = 30;
@@ -206,49 +206,17 @@ class MassiveShot extends Shot {
 //****************************FLARE***************************//
 //************************************************************//
 
-public abstract class Flare {
-  private PVector loc;
-  private PVector vel;
-  private PVector acc;
-  boolean inFlight, exploding = false, damaging = false;
-  float weapSize = 8;
-  int numOfBounces = 0;
+public class Flare extends Weapon {
   float time_i = 0;
-  String name;
+  int numOfBounces;
   
   public Flare(PVector location, PVector velocity) {
-    this.loc = location;
-    this.vel = velocity;
-    this.acc = new PVector(0, 0.1); //gravity
-    inFlight = true;
+    super(location, velocity);
+    weapSize = 8;
     numOfBounces = 0;
   }
   
-  abstract void explode(ArrayList<Tank> players);
-  
-  public PVector getVelocity() {
-    return this.vel;
-  }
-  
-  public PVector getLocation() {
-    return this.loc;
-  }
-  
-  public PVector getAcceleration() {
-    return this.acc;
-  }
-  
-  public void setVelocity(PVector newVel) {
-    this.vel = newVel;
-  }
-  
-  public void setLocation(PVector newLoc) {
-    this.loc = newLoc;
-  }
-  
-  public void setAcceleration(PVector newAcc) {
-    this.acc = newAcc;
-  }
+  void explode(ArrayList<Tank> players) {};
   
   public void display() {
     if (exploding) {} else {
@@ -311,7 +279,6 @@ public abstract class Flare {
             if (numOfBounces > 4 && getVelocity().mag() < 0.2)  {
               explode(players);
             }
-            
           }
         }
       }
@@ -327,7 +294,7 @@ class DropShot extends Flare {
   }
   
   void explode(ArrayList<Tank> players) {
-    players.get(tankTurn).bullets.add(new Shot(new PVector(getLocation().x, 0), new PVector(0, 0)));
+    players.get(tankTurn).bullets_from_bullets.add(new Shot(new PVector(getLocation().x, 0), new PVector(0, 0)));
     exploding = true;
   }
 }
