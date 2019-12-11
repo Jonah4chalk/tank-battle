@@ -1,5 +1,6 @@
 public class Tank {
   ArrayList<Weapon> bullets = new ArrayList<Weapon>(); // Track weapons in flight
+  ArrayList<Weapon> bullets_from_bullets = new ArrayList<Weapon>(); // Tracking weapons created by top-level bullets
   ArrayList<Flare> projectiles = new ArrayList<Flare>(); // Track flares in flight
   ArrayList<Weapon> weapons = new ArrayList<Weapon>(); // Part of inventory
   ArrayList<Flare> flares = new ArrayList<Flare>(); // Part of inventory
@@ -126,7 +127,6 @@ public class Tank {
     currentNozzleAngle += aChange*(int(rotRight) - int(rotLeft));
     y = int(l.terrain.getVertex(x).y);
     center.set(x, y);
-    
     noz.set(x + 25, y);
     nozVec = PVector.sub(noz, center);
     float nx, ny;
@@ -166,23 +166,7 @@ public class Tank {
       nozzle.setFill(color(120));
     }
     colorMode(RGB, 255, 255, 255);
-    
-    //************************* INVENTORY *************************//
-    
-    int inventorySize = weapons.size() + flares.size();
-    selection += int(selectNext) - int(selectPrev);
-    if (selection < 0) {
-        selection = inventorySize - 1;
-      }
-    if (selection >= inventorySize) {
-        selection = 0;
-      }
-    if (inventorySize <= 5) {
-      fillInventory();
-    }
-    //println(fuel);
-    //println(center.x);
-  }  
+  }
   
   void wUpdate() {
     for (Weapon w: bullets) {
@@ -190,10 +174,10 @@ public class Tank {
       strokeWeight(1);
       w.display();
     }
-    for (Flare f: projectiles) {
-      f.update(players);
+    for (Weapon x: bullets_from_bullets) {
+      x.update(players);
       strokeWeight(1);
-      f.display();
+      x.display();
     }
   }
   
@@ -208,28 +192,16 @@ public class Tank {
     velocity.x = nx;
     velocity.y = ny;
     //velocity is the vector that the projectile initially travels
-    
-    if (selection >= weapons.size()) {
-      selection -= weapons.size();
-      Flare f = flares.get(selection);
-      f.setLocation(nozVec);
-      f.setVelocity(velocity);
-      projectiles.add(f);
-      flares.remove(selection);
-      selection += weapons.size();
-    }
-    else {
-      Weapon b = weapons.get(selection);
-      b.setLocation(nozVec);
-      b.setVelocity(velocity);
-      bullets.add(b);
-      weapons.remove(selection);
-    }
+    Weapon b = weapons.get(selection);
+    b.setLocation(nozVec);
+    b.setVelocity(velocity);
+    bullets.add(b);
+    weapons.remove(selection);
   }
   
   void fillInventory() {
     for (int i = 0; i < 10; i++) { // max number is final inventory size
-      int rand = int(random(4)); // for now this has to be equal to the number of weapons available
+      int rand = int(random(5)); // for now this has to be equal to the number of weapons available
       Weapon w = new Shot(nozVec, power);
       switch(rand) { // this switch needs to contain every weapon
         case 0:
@@ -244,14 +216,10 @@ public class Tank {
         case 3:
           w = new MassiveShot(nozVec, power);
           break;
+        case 4:
+          w = new DropShot(nozVec, power);
       }
       weapons.add(w);
-    }
-    
-    for (int i = 0; i < 10; i++) { // max number is final inventory size
-      int rand = int(random(1)); // for now this has to be equal to the number of weapons available
-      Flare f = new DropShot(nozVec, power);
-      flares.add(f);
     }
   }
 }
