@@ -13,7 +13,7 @@ PImage screenshot, right_pointer, left_pointer;
 
 
 void setup() {
-  state = 3;
+  state = 0;
   fullScreen();
   frameRate(60);
   symbol = loadFont("Symbol-48.vlw");
@@ -200,11 +200,26 @@ void draw() {
     text("PREVIOUS PAGE", 60, 845);
     textAlign(CENTER, CENTER);
     text("BACK TO MAIN MENU", width/2, height*19/20);
+    textAlign(LEFT, TOP);
     textFont(sans, 18);
     fill(255);
     text("The map is where all tanks travel. You will always move along the terrain.", 530, 300);
     image(left_pointer, 10, 830);
   } 
+  
+  else if (state == 5) {
+    background(250);
+    fill(0);
+    textFont(symbol, 48);
+    textAlign(CENTER, CENTER);
+    textLeading(150);
+    text("Developed by: Jonah Fourchalk\nWith inspiration from: ShellShock Live by KChamp Games", width/2, 200);
+    textLeading(50);
+    textFont(symbol, 36);
+    text("Thank you to my brother, Patrick, for helping me out with this project\nand my family for supporting me from across the country.", width/2, 550);
+    textFont(stencil, 30);
+    text("BACK TO MAIN MENU", width/2, height*19/20);
+  }
 }
     
 void keyPressed() {  
@@ -295,6 +310,10 @@ void mouseClicked() {
       if (mouseX <= 300 && mouseY >= 780) {
         state = 3;
       }
+      if (mouseX <= width*3/5 && mouseX >= width*2/5 && mouseY >= 780) {
+        state = 0;
+      }
+    case 5:
       if (mouseX <= width*3/5 && mouseX >= width*2/5 && mouseY >= 780) {
         state = 0;
       }
